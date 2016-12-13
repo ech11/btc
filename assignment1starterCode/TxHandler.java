@@ -56,12 +56,12 @@ public class TxHandler {
     	
         //4, 5
     	for(int i = 0; i < tx.getOutputs().size(); ++i) {
-    		Transaction.Output to = tx.getOutput(i);
+    		Transaction.Output txOut = tx.getOutput(i);
     		
     		//4
-    		if(to.value < 0.0)
+    		if(txOut.value < 0.0)
     			return false;
-    		sum_output += to.value;
+    		sum_output += txOut.value;
     	}
     	
     	//5
@@ -82,11 +82,32 @@ public class TxHandler {
     		if(!isValidTx(tx))
     			continue;
     		
+    		//update utxoPool for valid tx
+    		updatePool(tx);
+    		
     		valid_txs.add(tx);
     	}
     	
-    	Set<Transaction> res = new HashSet<Transaction>(valid_txs);
-    	return res.toArray(new Transaction[res.size()]);
+    	return valid_txs.toArray(new Transaction[valid_txs.size()]);
     }
 
+    private void updatePool(final Transaction tx) {
+    	//remove inputs
+    	for(int i = 0; i < tx.getInputs().size(); ++i) {
+    		Transaction.Input ti = tx.getInput(i);
+    		
+    		UTXO utxo = new UTXO(ti.prevTxHash, ti.outputIndex);
+
+    		utxoPool.removeUTXO(utxo);
+    	}
+    	
+    	//add outputs
+    	for(int i = 0; i < tx.getOutputs().size(); ++i) {
+    		Transaction.Output txOut = tx.getOutput(i);
+    		
+    		UTXO utxo = new UTXO(tx.getHash(), i);
+
+    		utxoPool.addUTXO(utxo, txOut);
+    	}
+    }
 }
