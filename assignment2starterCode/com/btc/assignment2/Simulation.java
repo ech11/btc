@@ -28,13 +28,15 @@ public class Simulation {
 
       // pick which nodes are malicious and which are compliant
       Node[] nodes = new Node[numNodes];
+      int num_malicious_nodes = 0;
       for (int i = 0; i < numNodes; i++) {
-         if(Math.random() < p_malicious)
+         if(Math.random() < p_malicious) {
             // When you are ready to try testing with malicious nodes, replace the
             // instantiation below with an instantiation of a MaliciousNode
             nodes[i] = new MaliciousNode(p_graph, p_malicious, p_txDistribution, numRounds);
+            ++num_malicious_nodes;
         	//nodes[i] = new CompliantNode(p_graph, p_malicious, p_txDistribution, numRounds);
-         else
+         } else
             nodes[i] = new CompliantNode(p_graph, p_malicious, p_txDistribution, numRounds);
       }
 
@@ -115,15 +117,24 @@ public class Simulation {
       }
 
       // print results
+      HashMap<Integer, Integer> count_map = new HashMap<Integer, Integer>(); //# of transactions -> # of nodes with that many transactions
       for (int i = 0; i < numNodes; i++) {
          Set<Transaction> transactions = nodes[i].sendToFollowers();
          System.out.println("Transaction ids (size=" + transactions.size() + ") that Node " + i + " believes consensus on:");
+         Integer count = count_map.get(transactions.size());
+         if(count == null)
+        	 count = 0;
+         count_map.put(transactions.size(), count+1);
          //for (Transaction tx : transactions)
          //   System.out.println(tx.id);
          //System.out.println();
          //System.out.println();
       }
-
+      System.out.println("num_malicious_nodes=" + num_malicious_nodes);
+      for(int i = 0; i <= numTx; ++i) {
+    	  if(count_map.containsKey(i))
+    		  System.out.println("#transactions: " + i + ", #nodes: "+ count_map.get(i));
+      }
    }
 
 

@@ -1,4 +1,4 @@
-//package com.btc.assignment2;
+package com.btc.assignment2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,10 +49,12 @@ public class CompliantNode implements Node {
     	
     	Set<Transaction> tx_follow = new HashSet<Transaction>();
     	Set<Transaction> tx_not_follow = new HashSet<Transaction>();
+    	Set<Transaction> tx_all = new HashSet<Transaction>();
     	Map<Integer, Set<Transaction>> node_tx_map = new HashMap<Integer, Set<Transaction>>();
         Map<Transaction, Integer> tx_node_count = new HashMap<Transaction, Integer>();
     	
         for(Candidate c : candidates) {
+        	tx_all.add(c.tx);
         	if(followees[c.sender])
         		tx_follow.add(c.tx);
         	else
@@ -84,15 +86,41 @@ public class CompliantNode implements Node {
         	*/
         }
         
-        pendingTransactions.clear();
+        Set<Transaction> pendingTransactions_prev = pendingTransactions;
+        //pendingTransactions.clear();
+        pendingTransactions = new HashSet<Transaction>();
         //pendingTransactions.addAll(tx_follow);
 
         //for(Integer node : node_tx_map.keySet()) {}
-        int num_nodes = node_tx_map.keySet().size();
+
+        int num_nodes = node_tx_map.keySet().size() + 1;
         for(Transaction tx : tx_node_count.keySet()) {
         	int node_count = tx_node_count.get(tx);
-        	if((double)node_count/(double)num_nodes > p_malicious)
+        	if(pendingTransactions_prev.contains(tx))
+        		++node_count;
+        	if((double)node_count/(double)num_nodes >= p_malicious)
+        	//if((double)node_count/(double)num_nodes >= 0.5)
         		pendingTransactions.add(tx);
         }
+
+        /*
+        for(Transaction tx : tx_all) {
+        	boolean tx_in_all_nodes = true;
+        	
+        	for(Integer node : node_tx_map.keySet()) {
+        		Set<Transaction> node_tx = node_tx_map.get(node);
+        		if(node_tx.size() == 0)
+        			continue;
+        		
+        		if(!node_tx.contains(tx)) {
+        			tx_in_all_nodes = false;
+        			break;
+        		}
+        	}
+        	
+        	if(tx_in_all_nodes)
+        		pendingTransactions.add(tx);
+        }
+        */
     }
 }
